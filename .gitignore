@@ -1,0 +1,25 @@
+# Entornos virtuales
+venv/
+env/
+.venv/
+
+# Caché de Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Directorio de datos e imágenes
+datos/*
+!datos/.keep
+
+# Salidas de PyTorch / Modelos guardados
+*.pt
+*.pth
+
+# Variables de entorno y secretos
+.env
+
+# Archivos de sistema y configuración de IDEs
+.DS_Store
+.vscode/
+.idea/
