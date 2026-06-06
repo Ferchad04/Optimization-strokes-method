@@ -16,7 +16,7 @@ class OptimizadorStrokes:
         self.imagen_objetivo = imagen_objetivo.to(self.dispositivo)
         self.metrica_perdida = metrica_perdida.to(self.dispositivo)
 
-    def optimizar_stroke(self, stroke, lienzo_actual, iteraciones=100, metodo='adam', lr=0.01):
+    def optimizar_stroke(self, stroke, lienzo_actual, cantidad_pinceladas, iteraciones=100, metodo='adam', lr=0.01):
         """
         Ejecuta el ciclo de actualización de gradientes para un stroke específico.
         
@@ -51,11 +51,12 @@ class OptimizadorStrokes:
                 lienzo_propuesto = lienzo_actual * (1 - mascara) + stroke_renderizado
                 
                 # Calcular error
-                perdida = self.metrica_perdida.mse(self.imagen_objetivo, lienzo_propuesto)
+                perdida, desglose = self.metrica_perdida(self.imagen_objetivo, lienzo_propuesto, cantidad_pinceladas, stroke)
                 
                 # Backward pass
                 perdida.backward()
                 optimizador.step()
+                historial_perdida.append(perdida.item())
                 
                 historial_perdida.append(perdida.item())
                 
@@ -64,7 +65,7 @@ class OptimizadorStrokes:
                     optimizador.zero_grad()
                     stroke_renderizado, mascara = stroke.renderizar_en_lienzo(alto, ancho)
                     lienzo_propuesto = lienzo_actual * (1 - mascara) + stroke_renderizado
-                    perdida = self.metrica_perdida.mse(self.imagen_objetivo, lienzo_propuesto)
+                    perdida, _ = self.metrica_perdida(self.imagen_objetivo, lienzo_propuesto, cantidad_pinceladas, stroke)
                     perdida.backward()
                     return perdida
                 
