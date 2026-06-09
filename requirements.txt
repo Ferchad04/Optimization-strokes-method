@@ -1,2 +1,11 @@
 --extra-index-url https://download.pytorch.org/whl/cu121
 torch==2.11.0
+# Núcleo de cálculo tensorial y soporte GPU
+--extra-index-url https://download.pytorch.org/whl/cu121
+torch==2.11.0
+
+# Herramientas de visión y transformaciones (Requerido por main.py)
+torchvision
+
+# Procesamiento de imágenes I/O (Requerido por main.py para PIL)
+Pillow
