@@ -3,11 +3,10 @@ import torch.optim as optim
 
 class OptimizadorStrokes:
     """
-    Controla el bucle de optimización para ajustar los parámetros de una pincelada
-    minimizando la pérdida respecto a la imagen objetivo.
+    Controla el bucle de optimización para ajustar los parámetros de un lote 
+    de K pinceladas minimizando la pérdida global.
     """
     def __init__(self, imagen_objetivo, metrica_perdida, dispositivo=None):
-        # Configuración de hardware para procesamiento tensorial
         if dispositivo is None:
             self.dispositivo = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         else:
@@ -16,75 +15,40 @@ class OptimizadorStrokes:
         self.imagen_objetivo = imagen_objetivo.to(self.dispositivo)
         self.metrica_perdida = metrica_perdida.to(self.dispositivo)
 
-    def optimizar_stroke(self, stroke, lienzo_actual, cantidad_pinceladas, iteraciones=100, metodo='adam', lr=0.01):
+    def optimizar_lote(self, lote_pinceladas, lienzo_actual, cantidad_pinceladas, iteraciones=50, lr=0.1):
         """
-        Ejecuta el ciclo de actualización de gradientes para un stroke específico.
-        
-        Args:
-            stroke (nn.Module): Instancia de PinceladaDiferenciable.
-            lienzo_actual (Tensor): Estado actual de la reconstrucción.
-            iteraciones (int): Número de pasos de optimización.
-            metodo (str): 'adam' (Gradiente Descendente) o 'lbfgs' (Quasi-Newton).
-            lr (float): Tasa de aprendizaje.
+        Ejecuta la actualización de gradientes para un lote (Batch) completo.
         """
-        stroke = stroke.to(self.dispositivo)
+        lote_pinceladas = lote_pinceladas.to(self.dispositivo)
         lienzo_actual = lienzo_actual.to(self.dispositivo)
         alto, ancho = self.imagen_objetivo.shape[1], self.imagen_objetivo.shape[2]
 
-        # Selección del algoritmo de optimización
-        if metodo == 'adam':
-            optimizador = optim.Adam(stroke.parameters(), lr=lr)
-        elif metodo == 'lbfgs':
-            # L-BFGS requiere un closure para reevaluar la función objetivo múltiples veces
-            optimizador = optim.LBFGS(stroke.parameters(), lr=lr)
-        else:
-            raise ValueError("Método no soportado. Use 'adam' o 'lbfgs'.")
-
+        optimizador = optim.Adam(lote_pinceladas.parameters(), lr=lr)
         historial_perdida = []
 
-        for i in range(iteraciones):
-            if metodo == 'adam':
-                optimizador.zero_grad()
+        for _ in range(iteraciones):
+            optimizador.zero_grad()
+            
+            # Forward pass vectorial
+            lote_coloreado, lote_mascaras = lote_pinceladas.renderizar_lote(alto, ancho)
+            lienzo_propuesto = lote_pinceladas.componer_lienzo(lote_coloreado, lote_mascaras, lienzo_actual)
+            
+            # Cálculo de error global frente a la suma del lote
+            perdida, _ = self.metrica_perdida(self.imagen_objetivo, lienzo_propuesto, cantidad_pinceladas, lote_pinceladas)
+            
+            # Backward pass 
+            perdida.backward()
+            optimizador.step()
+            historial_perdida.append(perdida.item())
                 
-                # Forward pass: renderizar y superponer
-                stroke_renderizado, mascara = stroke.renderizar_en_lienzo(alto, ancho)
-                lienzo_propuesto = lienzo_actual * (1 - mascara) + stroke_renderizado
-                
-                # Calcular error
-                perdida, desglose = self.metrica_perdida(self.imagen_objetivo, lienzo_propuesto, cantidad_pinceladas, stroke)
-                
-                # Backward pass
-                perdida.backward()
-                optimizador.step()
-                historial_perdida.append(perdida.item())
-                
-                historial_perdida.append(perdida.item())
-                
-            elif metodo == 'lbfgs':
-                def closure():
-                    optimizador.zero_grad()
-                    stroke_renderizado, mascara = stroke.renderizar_en_lienzo(alto, ancho)
-                    lienzo_propuesto = lienzo_actual * (1 - mascara) + stroke_renderizado
-                    perdida, _ = self.metrica_perdida(self.imagen_objetivo, lienzo_propuesto, cantidad_pinceladas, stroke)
-                    perdida.backward()
-                    return perdida
-                
-                optimizador.step(closure)
-                # L-BFGS ejecuta múltiples pasos internos, se registra la pérdida final del paso
-                with torch.no_grad():
-                    stroke_renderizado, mascara = stroke.renderizar_en_lienzo(alto, ancho)
-                    lienzo_propuesto = lienzo_actual * (1 - mascara) + stroke_renderizado
-                    perdida_actual = self.metrica_perdida.mse(self.imagen_objetivo, lienzo_propuesto)
-                    historial_perdida.append(perdida_actual.item())
-
-            # Restricciones de parámetros (ej. mantener colores entre 0 y 1)
+            # Restricciones post-actualización
             with torch.no_grad():
-                stroke.color_rgb.clamp_(0.0, 1.0)
-                stroke.transparencia_alfa.clamp_(0.0, 1.0)
-                stroke.tamano_radio.clamp_(min=1.0) # Evitar radios negativos o cero
+                lote_pinceladas.color_rgb.clamp_(0.0, 1.0)
+                lote_pinceladas.transparencia_alfa.clamp_(0.0, 1.0)
+                lote_pinceladas.tamano_radio.clamp_(min=1.0)
 
-        # Devolver el stroke optimizado y la pérdida final
-        stroke_renderizado_final, mascara_final = stroke.renderizar_en_lienzo(alto, ancho)
-        lienzo_final = lienzo_actual * (1 - mascara_final) + stroke_renderizado_final
+        # Renderizado final con el grafo desconectado
+        lote_coloreado_final, lote_mascaras_final = lote_pinceladas.renderizar_lote(alto, ancho)
+        lienzo_final = lote_pinceladas.componer_lienzo(lote_coloreado_final, lote_mascaras_final, lienzo_actual)
         
-        return stroke, lienzo_final, historial_perdida
+        return lote_pinceladas, lienzo_final.detach(), historial_perdida

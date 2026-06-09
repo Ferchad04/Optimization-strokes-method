@@ -30,10 +30,11 @@ class PerdidaCompuesta(nn.Module):
         penalizacion_cantidad = torch.tensor(float(cantidad_pinceladas), device=imagen_original.device)
         
         # Penalización por tamaño: L = Error + lambda * area(s)
+        # Penalización por tamaño vectorizada: L = Error + lambda * sum(area(s_k))
         if stroke_actual.tipo_figura == "circulo":
-            area_estimada = math.pi * (stroke_actual.tamano_radio ** 2)
+            area_estimada = torch.sum(torch.pi * (stroke_actual.tamano_radio ** 2))
         elif stroke_actual.tipo_figura == "rectangulo":
-            area_estimada = (stroke_actual.tamano_radio * 2) ** 2
+            area_estimada = torch.sum((stroke_actual.tamano_radio * 2) ** 2)
         else:
             area_estimada = torch.tensor(0.0, device=imagen_original.device)
             
