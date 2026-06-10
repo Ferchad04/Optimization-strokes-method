@@ -63,8 +63,8 @@ def orquestar_reconstruccion():
         "directorio_salida": "data/ejemplo_simple",
         "alto_resolucion": 400,
         "ancho_resolucion": 500,
-        "K_batch_size": 40,         # Pinceladas simultáneas
-        "total_strokes": 1000,      # Objetivo final
+        "K_batch_size": 40,         
+        "total_strokes": 1000,      
         "iteraciones_por_lote": 40,
         "learning_rate": 0.05,
         "w_mse": 0.8,
