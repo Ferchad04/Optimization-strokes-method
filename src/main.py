@@ -59,17 +59,17 @@ def generar_lote_candidato(imagen_objetivo, lienzo_actual, alto, ancho, K):
 
 def orquestar_reconstruccion():
     CONFIG = {
-        "ruta_imagen": "data/pintura_proyecto_01.jpeg",
+        "ruta_imagen": "data/proyecto.jpg",
         "directorio_salida": "data/ejemplo_simple",
         "alto_resolucion": 400,
         "ancho_resolucion": 500,
-        "K_batch_size": 30,         # Pinceladas simultáneas
+        "K_batch_size": 40,         # Pinceladas simultáneas
         "total_strokes": 1000,      # Objetivo final
-        "iteraciones_por_lote": 50,
-        "learning_rate": 0.1,
-        "w_mse": 1.2,
-        "w_ssim": 0.8,
-        "w_cantidad": 0.002,
+        "iteraciones_por_lote": 40,
+        "learning_rate": 0.05,
+        "w_mse": 0.8,
+        "w_ssim": 1.2,
+        "w_cantidad": 0.001,
         "w_area": 0.0010
     }
 
