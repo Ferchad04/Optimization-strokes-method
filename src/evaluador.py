@@ -40,11 +40,11 @@ def evaluar_resultados():
 
     # Diccionario con los nombres de los archivos generados por cada configuración
     archivos_prueba = {
-        "Config 1 (Circulo)": "data/Circulos_01/reconstruccion_1000.png",
-        "Config 2 (Elipse)": "data/elipse_02/reconstruccion_600.png",
-        "Config 3 (Gaussiana)": "data/gaussiana_01/reconstruccion_500.png",
-        "Config 4 (Rectangulo)": "data/rectangulo_01/reconstruccion_300.png",
-        "Config 5 (Capsula)": "data/capsula_01/reconstruccion_400.png"
+        "Config 1 (Circulo)": "data/Circulos_01/Circulos.png",
+        "Config 2 (Elipse)": "data/elipse_02/reconstruccion_900.png",
+        "Config 3 (Gaussiana)": "data/gaussiana_01/gaussiana.png",
+        "Config 4 (Rectangulo)": "data/rectangulo_01/reconstruccion_1000.png",
+        "Config 5 (Capsula)": "data/capsula_01/capsula.png"
     }
 
     print("-" * 80)
