@@ -64,15 +64,12 @@ class LotePinceladasDiferenciables(nn.Module):
         # 4. GAUSSIANA
         elif self.tipo_figura == "gaussiana":
             distancia_al_cuadrado = (distancia_x ** 2) + (distancia_y ** 2)
-            # No usa sigmoide, la atenuación es la campana de Gauss directamente
             mascara_figura = torch.exp(-distancia_al_cuadrado / (2 * (self.tamano_radio ** 2)))
             
         # 5. CÁPSULA (Cilindro con bordes redondeados)
         elif self.tipo_figura == "capsula":
-            # Proyectar punto sobre el segmento de línea central
             mitad_longitud = self.longitud / 2.0
             x_clamp = torch.clamp(x_rotado, -mitad_longitud, mitad_longitud)
-            # Distancia desde el punto proyectado
             distancia_al_cuadrado = (x_rotado - x_clamp)**2 + (y_rotado)**2
             limite_figura = (self.tamano_radio ** 2) - distancia_al_cuadrado
             mascara_figura = torch.sigmoid(limite_figura * multiplicador_nitidez)
