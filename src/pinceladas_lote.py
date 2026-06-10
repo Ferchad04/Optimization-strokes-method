@@ -16,7 +16,6 @@ class LotePinceladasDiferenciables(nn.Module):
         self.tamano_radio = nn.Parameter(torch.tensor(radios_iniciales, dtype=torch.float32).view(K, 1, 1))
         
         # Parámetros adicionales para Elipses, Rectángulos y Cápsulas
-        # Se inicializan en 1.0 y longitud igual al radio si no se proveen desde main.py
         self.relacion_aspecto = nn.Parameter(torch.ones(K, 1, 1, dtype=torch.float32))
         self.longitud = nn.Parameter(torch.tensor(radios_iniciales, dtype=torch.float32).view(K, 1, 1) * 2.0)
         
